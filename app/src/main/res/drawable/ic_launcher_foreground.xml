@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Speedometer gauge icon.
+  Canvas 108×108. Centre (54, 64). Gauge radius 24.
+  Arc spans 240° clockwise from 8-o'clock (150°) through 12-o'clock (270°) to 4-o'clock (30°).
+  Needle is locked at the 0.5× position (straight up, 270°).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Gauge track: full 240° arc (dim) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#44FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M 33,76 A 24,24 0 1 1 75,76" />
+
+    <!-- Gauge fill: 0 → 0.5× (120° clockwise, purple) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#BB86FC"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M 33,76 A 24,24 0 0 1 54,40" />
+
+    <!-- Min dot at 8-o'clock -->
+    <path
+        android:fillColor="#66FFFFFF"
+        android:pathData="M33,76 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+
+    <!-- Max dot at 4-o'clock -->
+    <path
+        android:fillColor="#66FFFFFF"
+        android:pathData="M75,76 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+
+    <!-- Needle -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M 54,64 L 54,44" />
+
+    <!-- Centre dot -->
+    <path
+        android:fillColor="#BB86FC"
+        android:pathData="M54,64 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+
+</vector>

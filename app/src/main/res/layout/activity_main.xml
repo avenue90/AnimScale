@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp"
+    android:background="@color/bg">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Animation Scale"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tv_current_scale"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Current: —"
+        android:textSize="16sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/tv_permission_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Permission: checking…"
+        android:textSize="13sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_grant_permission"
+        android:layout_width="240dp"
+        android:layout_height="56dp"
+        android:text="Grant Permission"
+        android:textSize="15sp"
+        android:visibility="gone"
+        app:backgroundTint="#CF6679"
+        android:layout_marginBottom="24dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_half"
+        android:layout_width="240dp"
+        android:layout_height="56dp"
+        android:text="Set 0.5x  (recommended)"
+        android:textSize="15sp"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_one"
+        android:layout_width="240dp"
+        android:layout_height="56dp"
+        android:text="Set 1x  (default)"
+        android:textSize="15sp"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_off"
+        android:layout_width="240dp"
+        android:layout_height="56dp"
+        android:text="Off  (0x — no animations)"
+        android:textSize="15sp"
+        style="@style/Widget.Material3.Button.OutlinedButton" />
+
+</LinearLayout>
