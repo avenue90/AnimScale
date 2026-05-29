@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AnimScale — Lock Android animation speed</title>
+  <meta name="description" content="Lock Android animation speed to 0.5× and keep it there — even when Developer Options is off. No root required." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0b0b14;
+      --surface:  #13131f;
+      --surface2: #1c1c2e;
+      --accent:   #BB86FC;
+      --accent2:  #9b59f0;
+      --text:     #f0f0f8;
+      --muted:    #8888aa;
+      --border:   #ffffff14;
+      --radius:   16px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 48px;
+      background: rgba(11,11,20,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 1.1rem; color: var(--text);
+      text-decoration: none;
+    }
+    .nav-logo svg { width: 30px; height: 30px; }
+    .nav-links { display: flex; align-items: center; gap: 16px; }
+    .btn-github {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 18px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text); text-decoration: none;
+      font-size: 0.875rem; font-weight: 500;
+      transition: border-color .2s, background .2s;
+    }
+    .btn-github:hover { border-color: var(--accent); background: rgba(187,134,252,.08); }
+    .btn-github svg { width: 16px; height: 16px; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 92vh;
+      display: flex; align-items: center;
+      padding: 80px 48px 60px;
+      position: relative; overflow: hidden;
+    }
+    .hero-glow {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 60% at 80% 40%, rgba(187,134,252,.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 10% 80%, rgba(155,89,240,.08) 0%, transparent 70%);
+    }
+    .hero-content {
+      flex: 1; max-width: 560px; position: relative; z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px;
+      background: rgba(187,134,252,.12);
+      border: 1px solid rgba(187,134,252,.25);
+      border-radius: 100px;
+      font-size: 0.8rem; font-weight: 600; color: var(--accent);
+      margin-bottom: 28px;
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 5vw, 3.6rem);
+      font-weight: 800; line-height: 1.15; letter-spacing: -0.03em;
+      margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p {
+      font-size: 1.1rem; color: var(--muted); margin-bottom: 36px;
+      max-width: 440px; line-height: 1.7;
+    }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px;
+      background: var(--accent); color: #0b0b14;
+      border-radius: 10px; font-weight: 700; font-size: 0.95rem;
+      text-decoration: none; transition: filter .2s, transform .15s;
+    }
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px;
+      border: 1px solid var(--border); color: var(--text);
+      border-radius: 10px; font-weight: 500; font-size: 0.95rem;
+      text-decoration: none; transition: border-color .2s, background .2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); background: rgba(187,134,252,.06); }
+
+    .hero-phone {
+      flex: 0 0 auto; margin-left: 80px;
+      position: relative; z-index: 1;
+    }
+
+    /* ── PHONE MOCKUP ── */
+    .phone-frame {
+      width: 240px;
+      border-radius: 44px;
+      border: 7px solid #2a2a40;
+      background: #000;
+      box-shadow:
+        0 0 0 1px #3a3a58,
+        0 50px 120px rgba(0,0,0,.8),
+        0 0 80px rgba(187,134,252,.08);
+      overflow: hidden;
+      position: relative;
+    }
+    .phone-frame img { width: 100%; display: block; }
+    .phone-frame-sm {
+      width: 200px;
+      border-radius: 38px;
+      border: 6px solid #2a2a40;
+      background: #000;
+      box-shadow:
+        0 0 0 1px #3a3a58,
+        0 40px 80px rgba(0,0,0,.7),
+        0 0 50px rgba(187,134,252,.06);
+      overflow: hidden;
+    }
+    .phone-frame-sm img { width: 100%; display: block; }
+
+    /* ── SECTIONS ── */
+    section { padding: 96px 48px; }
+    .section-label {
+      font-size: 0.75rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 14px;
+    }
+    h2 {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 800; letter-spacing: -0.025em; line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 1.05rem; color: var(--muted); max-width: 520px; line-height: 1.7;
+    }
+
+    /* ── PROBLEM ── */
+    .problem {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .problem-inner {
+      max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+    }
+    .problem-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .problem-card-icon { font-size: 2rem; margin-bottom: 14px; }
+    .problem-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .problem-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+    .arrow-icon {
+      font-size: 2rem; color: var(--accent); text-align: center; align-self: center;
+    }
+
+    /* ── FEATURES ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px; margin-top: 52px;
+      max-width: 1000px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover { border-color: rgba(187,134,252,.35); transform: translateY(-3px); }
+    .feature-icon {
+      width: 44px; height: 44px;
+      background: rgba(187,134,252,.12);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 16px;
+    }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 0.875rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── SCREENSHOTS ── */
+    .screenshots { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .screenshots-inner { max-width: 1000px; margin: 0 auto; }
+    .phones-row {
+      display: flex; align-items: flex-end; justify-content: center;
+      gap: 40px; margin-top: 60px; flex-wrap: wrap;
+    }
+    .phone-caption {
+      text-align: center; margin-top: 18px;
+      font-size: 0.8rem; color: var(--muted); font-weight: 500;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .steps {
+      display: flex; flex-direction: column; gap: 0;
+      max-width: 680px; margin-top: 52px;
+    }
+    .step {
+      display: flex; gap: 24px;
+      padding: 28px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      flex: 0 0 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(187,134,252,.12);
+      border: 1px solid rgba(187,134,252,.25);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1rem; color: var(--accent);
+    }
+    .step-body h3 { font-weight: 700; margin-bottom: 6px; }
+    .step-body p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── SETUP ── */
+    .setup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden; max-width: 640px; margin-top: 40px;
+    }
+    .setup-card-header {
+      padding: 12px 20px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem; color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    pre {
+      padding: 24px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.875rem; line-height: 1.8; color: var(--text);
+      overflow-x: auto;
+    }
+    .cmd-comment { color: #5a5a7a; }
+    .cmd-accent  { color: var(--accent); }
+
+    /* ── COFFEE ── */
+    .coffee {
+      text-align: center;
+      padding: 80px 48px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+    .coffee h2 { margin-bottom: 12px; }
+    .coffee p { color: var(--muted); margin-bottom: 36px; }
+    .btn-coffee {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 32px;
+      background: #FFDD00; color: #000;
+      border-radius: 10px; font-weight: 700; font-size: 1rem;
+      text-decoration: none; transition: filter .2s, transform .15s;
+    }
+    .btn-coffee:hover { filter: brightness(1.06); transform: translateY(-2px); }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 32px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+      border-top: 1px solid var(--border);
+    }
+    footer p { font-size: 0.85rem; color: var(--muted); }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+    .footer-links { display: flex; gap: 24px; }
+
+    /* ── FADE-IN ── */
+    .fade-in { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+    .fade-in.visible { opacity: 1; transform: none; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 14px 24px; }
+      section { padding: 72px 24px; }
+      .hero { padding: 64px 24px 48px; flex-direction: column; min-height: auto; }
+      .hero-phone { margin-left: 0; margin-top: 48px; }
+      .problem-inner { grid-template-columns: 1fr; gap: 24px; }
+      .arrow-icon { transform: rotate(90deg); }
+      footer { padding: 24px; flex-direction: column; align-items: flex-start; }
+      .coffee { padding: 64px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <!-- Speedometer SVG matching the app icon -->
+    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="24" fill="#1A1035"/>
+      <!-- gauge track -->
+      <path d="M 12 34 A 14 14 0 1 1 36 34" stroke="#44444a" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <!-- gauge fill to 0.5x -->
+      <path d="M 12 34 A 14 14 0 0 1 24 10" stroke="#BB86FC" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <!-- needle -->
+      <line x1="24" y1="24" x2="24" y2="13" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <!-- centre dot -->
+      <circle cx="24" cy="24" r="2.5" fill="#BB86FC"/>
+    </svg>
+    AnimScale
+  </a>
+  <div class="nav-links">
+    <a href="https://github.com/avenue90/AnimScale" class="btn-github" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-badge">⚡ For Android developers &amp; power users</div>
+    <h1>Your phone,<br>at the <span>speed you want.</span></h1>
+    <p>Lock Android animation speed to 0.5× and keep it there — even when Developer Options is off. No root required.</p>
+    <div class="hero-actions">
+      <a href="https://github.com/avenue90/AnimScale" class="btn-primary" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        View on GitHub
+      </a>
+      <a href="#how-it-works" class="btn-secondary">How it works →</a>
+    </div>
+  </div>
+  <div class="hero-phone">
+    <div class="phone-frame">
+      <img src="screenshots/screen_main.png" alt="AnimScale main screen showing 6 speed options" />
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem">
+  <div class="problem-inner fade-in">
+    <div>
+      <div class="section-label">The problem</div>
+      <h2>Banking apps vs. fast animations</h2>
+      <p class="section-sub" style="margin-top:12px">Most banking apps refuse to open when Developer Options is enabled. But turning it off resets your animation speed back to 1× — every. single. time. AnimScale ends that cycle permanently.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="problem-card">
+        <div class="problem-card-icon">🏦</div>
+        <h3>Without AnimScale</h3>
+        <p>Turn off Dev Options to use banking app → animations snap back to 1× → turn Dev Options back on → repeat forever.</p>
+      </div>
+      <div class="problem-card" style="border-color:rgba(187,134,252,.3);">
+        <div class="problem-card-icon">⚡</div>
+        <h3>With AnimScale</h3>
+        <p>Set 0.5× once → keeper service locks it → turn Dev Options off freely → animations stay fast. Done.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section>
+  <div class="fade-in">
+    <div class="section-label">Features</div>
+    <h2>Everything you need,<br>nothing you don't.</h2>
+  </div>
+  <div class="features-grid fade-in">
+    <div class="feature-card">
+      <div class="feature-icon">🎚️</div>
+      <h3>6 Speed Presets</h3>
+      <p>Off, 0.2×, 0.5×, 0.8×, 1×, and 2× — tap once to apply and lock.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3>Stays Locked</h3>
+      <p>A lightweight background service watches for any change and restores your chosen speed within 300ms.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔄</div>
+      <h3>Survives Reboots</h3>
+      <p>Your scale is restored automatically on every boot — no need to open the app.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🕵️</div>
+      <h3>Zero Tracking</h3>
+      <p>No internet permission. No analytics. No data collection. Ever. Open source and auditable.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENSHOTS -->
+<section class="screenshots">
+  <div class="screenshots-inner fade-in">
+    <div class="section-label">Screenshots</div>
+    <h2>See it in action.</h2>
+    <p class="section-sub">Running on a Samsung Galaxy S24 Ultra with Developer Options disabled.</p>
+    <div class="phones-row">
+      <div>
+        <div class="phone-frame">
+          <img src="screenshots/screen_main.png" alt="AnimScale showing 6 animation speed options" />
+        </div>
+        <p class="phone-caption">6 speed presets</p>
+      </div>
+      <div style="transform: translateY(-24px);">
+        <div class="phone-frame-sm">
+          <img src="screenshots/screen_locked.png" alt="Animations locked to 0.5x toast notification" />
+        </div>
+        <p class="phone-caption">Scale locked ✓</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works">
+  <div class="fade-in">
+    <div class="section-label">Setup</div>
+    <h2>Up and running<br>in three steps.</h2>
+  </div>
+  <div class="steps fade-in">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Clone &amp; run setup.sh</h3>
+        <p>One script builds the APK, installs it on your phone, and grants the two required permissions. Takes about 30 seconds. USB or wireless ADB both work.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Tap your speed</h3>
+        <p>Open the app, tap <strong style="color:var(--accent)">0.5× (recommended)</strong>. The keeper service starts and your scale is locked immediately.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Turn off Developer Options</h3>
+        <p>Done. Banking apps work. Animations stay fast. No further action needed — ever. Run <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:0.85em;">setup.sh</code> again only if you reinstall.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="setup-card fade-in" style="margin-top:52px">
+    <div class="setup-card-header">
+      <span class="dot" style="background:#ff5f56;"></span>
+      <span class="dot" style="background:#ffbd2e;"></span>
+      <span class="dot" style="background:#27c93f;"></span>
+      <span style="margin-left:8px;">Terminal</span>
+    </div>
+    <pre><span class="cmd-comment"># Clone the repo</span>
+<span class="cmd-accent">git</span> clone https://github.com/avenue90/AnimScale.git
+<span class="cmd-accent">cd</span> AnimScale
+
+<span class="cmd-comment"># Build, install, and grant permissions in one step</span>
+<span class="cmd-accent">./setup.sh</span></pre>
+  </div>
+</section>
+
+<!-- BUY ME A COFFEE -->
+<section class="coffee">
+  <div class="fade-in">
+    <h2>Like AnimScale?</h2>
+    <p>It's free and open source. If it saved you time, a coffee is always appreciated ☕</p>
+    <a href="https://www.buymeacoffee.com/avenue90" target="_blank" rel="noopener" class="btn-coffee">
+      ☕ Buy me a coffee
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <p>AnimScale &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; <a href="https://github.com/avenue90/AnimScale" target="_blank" rel="noopener">github.com/avenue90/AnimScale</a></p>
+  </div>
+  <div class="footer-links">
+    <a href="https://github.com/avenue90/AnimScale/issues" target="_blank" rel="noopener">Report an issue</a>
+    <a href="https://github.com/avenue90" target="_blank" rel="noopener">More projects</a>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.12 }
+  );
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
