@@ -1,15 +1,23 @@
 #!/bin/bash
+# setup.sh — build, install, and grant permissions in one step.
+# Deploys a debug APK (debuggable=true); intended for personal/developer use only.
 set -e
 
 APP_ID="com.ketangupta.animscale"
 PERMISSION="android.permission.SET_ANIMATION_SCALE"
-APK="app/build/outputs/apk/debug/app-debug.apk"
-GRADLE="$HOME/.gradle/wrapper/dists/gradle-8.12-all/ejduaidbjup3bmmkhw3rie4zb/gradle-8.12/bin/gradle"
-JAVA_HOME_AS="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ADB="$HOME/Library/Android/sdk/platform-tools/adb"
 
+# If the system JDK is 25+ (breaks Gradle Kotlin DSL), fall back to Android Studio's JBR.
+# Remove this block if your system Java is 17 or 21.
+AS_JBR="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+if [ -d "$AS_JBR" ]; then
+  export JAVA_HOME="$AS_JBR"
+fi
+
 echo "==> Building APK..."
-JAVA_HOME="$JAVA_HOME_AS" "$GRADLE" assembleDebug -p "$(dirname "$0")" -q
+"$(dirname "$0")/gradlew" assembleDebug -p "$(dirname "$0")" -q
+
+APK="$(dirname "$0")/app/build/outputs/apk/debug/app-debug.apk"
 
 # Pick the first real (non-emulator) device
 DEVICE=$("$ADB" devices | awk '/\tdevice$/ && !/emulator/ {print $1; exit}')

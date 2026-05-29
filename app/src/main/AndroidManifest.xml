@@ -36,14 +36,16 @@
             </intent-filter>
         </receiver>
 
-        <!-- Home screen widget -->
+        <!-- Home screen widget.
+             Custom actions (ACTION_SET_HALF / ACTION_SET_ONE) are intentionally absent from
+             this intent-filter. The widget buttons fire explicit PendingIntents that target
+             this component directly and do not need a matching filter. Listing them here would
+             allow any app on the device to spoof those broadcasts. -->
         <receiver
             android:name=".AnimScaleWidget"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.ketangupta.animscale.ACTION_SET_HALF" />
-                <action android:name="com.ketangupta.animscale.ACTION_SET_ONE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
