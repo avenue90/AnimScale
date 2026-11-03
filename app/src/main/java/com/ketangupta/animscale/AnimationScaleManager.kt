@@ -18,6 +18,27 @@ object AnimationScaleManager {
         }
     }
 
+    /** True only when all three stored scales equal [scale]. */
+    fun allAt(context: Context, scale: Float): Boolean = SCALE_KEYS.all {
+        Settings.Global.getFloat(context.contentResolver, it, 1f) == scale
+    }
+
+    /**
+     * Makes the window manager re-read [scale] even when the stored value is unchanged.
+     * Toggling Developer Options (One UI) resets the window manager's applied scales to 1x
+     * without writing these settings, and writing an identical value sends no change
+     * notification. Alternating between two spellings of the same number ("0.5"/"0.50")
+     * always counts as a change, with no visible intermediate value.
+     */
+    fun reapply(context: Context, scale: Float) {
+        val resolver = context.contentResolver
+        val plain = scale.toString()
+        SCALE_KEYS.forEach { key ->
+            val current = Settings.Global.getString(resolver, key)
+            Settings.Global.putString(resolver, key, if (current == plain) plain + "0" else plain)
+        }
+    }
+
     fun currentScale(context: Context): Float {
         return Settings.Global.getFloat(
             context.contentResolver,

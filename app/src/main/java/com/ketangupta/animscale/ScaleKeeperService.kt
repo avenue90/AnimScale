@@ -37,12 +37,33 @@ class ScaleKeeperService : Service() {
 
     private var targetScale = 1f
     private val handler = Handler(Looper.getMainLooper())
-    private lateinit var observer: ContentObserver
+    private var observing = false
 
     private val restoreRunnable = Runnable {
         if (!AnimationScaleManager.hasPermission(this)) return@Runnable
-        if (AnimationScaleManager.currentScale(this) != targetScale) {
+        if (!AnimationScaleManager.allAt(this, targetScale)) {
             AnimationScaleManager.setScale(this, targetScale)
+        }
+    }
+
+    // The stored values stay correct when Developer Options is toggled, but the window
+    // manager's applied scale drops to 1x, possibly after a delay; re-send the value a few times.
+    private val reapplyRunnable = Runnable {
+        if (AnimationScaleManager.hasPermission(this)) AnimationScaleManager.reapply(this, targetScale)
+    }
+    private val reapplyDelaysMs = longArrayOf(300, 1_500, 4_000)
+
+    private val scaleObserver = object : ContentObserver(handler) {
+        override fun onChange(selfChange: Boolean) {
+            handler.removeCallbacks(restoreRunnable)
+            handler.postDelayed(restoreRunnable, 300)
+        }
+    }
+
+    private val developerObserver = object : ContentObserver(handler) {
+        override fun onChange(selfChange: Boolean) {
+            handler.removeCallbacks(reapplyRunnable)
+            reapplyDelaysMs.forEach { handler.postDelayed(reapplyRunnable, it) }
         }
     }
 
@@ -59,26 +80,27 @@ class ScaleKeeperService : Service() {
             AnimationScaleManager.setScale(this, targetScale)
         }
 
-        // Watch all scale keys + developer options toggle
-        observer = object : ContentObserver(handler) {
-            override fun onChange(selfChange: Boolean) {
-                handler.removeCallbacks(restoreRunnable)
-                handler.postDelayed(restoreRunnable, 300)
+        // Register once; onStartCommand runs again for every scale change from the UI/widget.
+        if (!observing) {
+            observing = true
+            AnimationScaleManager.SCALE_KEYS.forEach { key ->
+                contentResolver.registerContentObserver(Settings.Global.getUriFor(key), false, scaleObserver)
             }
+            contentResolver.registerContentObserver(
+                Settings.Global.getUriFor(Settings.Global.DEVELOPMENT_SETTINGS_ENABLED), false, developerObserver
+            )
         }
-        AnimationScaleManager.SCALE_KEYS.forEach { key ->
-            contentResolver.registerContentObserver(Settings.Global.getUriFor(key), false, observer)
-        }
-        contentResolver.registerContentObserver(
-            Settings.Global.getUriFor(Settings.Global.DEVELOPMENT_SETTINGS_ENABLED), false, observer
-        )
 
         return START_STICKY
     }
 
     override fun onDestroy() {
         handler.removeCallbacks(restoreRunnable)
-        contentResolver.unregisterContentObserver(observer)
+        handler.removeCallbacks(reapplyRunnable)
+        if (observing) {
+            contentResolver.unregisterContentObserver(scaleObserver)
+            contentResolver.unregisterContentObserver(developerObserver)
+        }
         super.onDestroy()
     }
 

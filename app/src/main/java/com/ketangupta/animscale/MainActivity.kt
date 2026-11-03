@@ -34,6 +34,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Opening the app resumes a saved lock if the service was stopped.
+        ScaleKeeperService.savedScale(this)?.let { if (AnimationScaleManager.hasPermission(this)) ScaleKeeperService.start(this, it) }
         updateStatus()
     }
 
