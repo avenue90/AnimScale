@@ -24,9 +24,12 @@ class MainActivity : AppCompatActivity() {
         updateStatus()
 
         binding.btnGrantPermission.setOnClickListener { tryAutoGrant() }
-        binding.btnHalf.setOnClickListener { applyScale(0.5f, "0.5x") }
-        binding.btnOne.setOnClickListener { applyScale(1.0f, "1x") }
-        binding.btnOff.setOnClickListener { applyScale(0f, "Off (0x)") }
+        binding.btnOff.setOnClickListener    { applyScale(0f,   "Off (0x)") }
+        binding.btnPoint2.setOnClickListener { applyScale(0.2f, "0.2x") }
+        binding.btnHalf.setOnClickListener   { applyScale(0.5f, "0.5x") }
+        binding.btnPoint8.setOnClickListener { applyScale(0.8f, "0.8x") }
+        binding.btnOne.setOnClickListener    { applyScale(1.0f, "1x") }
+        binding.btnTwo.setOnClickListener    { applyScale(2.0f, "2x") }
     }
 
     override fun onResume() {
@@ -76,10 +79,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateStatus() {
         val current = AnimationScaleManager.currentScale(this)
-        val label = when {
-            current == 0f -> "Off"
-            current <= 0.5f -> "0.5x (fast)"
-            current == 1f -> "1x (default)"
+        val label = when (current) {
+            0f   -> "Off (0x)"
+            0.2f -> "0.2x (very fast)"
+            0.5f -> "0.5x (fast)"
+            0.8f -> "0.8x (slightly fast)"
+            1f   -> "1x (default)"
+            2f   -> "2x (slow)"
             else -> "${current}x"
         }
         binding.tvCurrentScale.text = "Current: $label"
